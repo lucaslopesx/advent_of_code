@@ -23,6 +23,14 @@ func TestCalculateSum(t *testing.T) {
 			input:    []string{"", " ", "0"},
 			expected: 0,
 		},
+		{
+			input:    []string{"two1nine", "eightwothree", "abcone2threexyz", "xtwone3four", "4nineeightseven2", "zoneight234", "7pqrstsixteen"},
+			expected: 281,
+		},
+		{
+			input:  []string{"3kbklxmh"},
+			expected: 33,
+		},
 	}
 
 	for _, test := range tests {
