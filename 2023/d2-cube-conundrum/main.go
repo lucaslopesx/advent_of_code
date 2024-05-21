@@ -2,65 +2,39 @@ package main
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
-var availableCubes = map[string]int{
-	"red":  		12,
-	"green": 		13,
-	"blue": 		14,
-}
-
 //go:embed input.txt
 var input string
 
-func findPlayableGameId(game string) (int, error) {
+func findPlayableGame(game string) (int, error) {
+	var cubes = map[string]int{
+		"red":   0,
+		"green": 0,
+		"blue":  0,
+	}
+
+	currentCubeValue := 0
+	currentCubeValueBuffer := ""
 	availableCubeBuffer := ""
 
-	currentCubeValueBuffer := ""
-	currentCubeValue := 0
-
-	gameIdBuffer := ""
-	gameId := 0
-
+	parts := strings.Split(game, ":")
+	if len(parts) != 2 {
+		return 0, fmt.Errorf("error invalid game")
+	}
+	game = parts[1]
 
 	for _, v := range game {
-
-		if(gameId == 0) {
-			if unicode.IsDigit(v) {
-				_, err := strconv.Atoi(string(v))
-				if err != nil {
-					return 0, err
-				}
-
-				gameIdBuffer += string(v)
-				continue
-			}
-
-			if len(gameIdBuffer) > 0 {
-				num, err := strconv.Atoi(gameIdBuffer)
-				if err != nil {
-					return 0, err
-				}
-
-				gameId = num
-			}
-			
-			continue
-		}
-
-
 		if currentCubeValue == 0 {
 			if unicode.IsDigit(v) {
 				_, err := strconv.Atoi(string(v))
 				if err != nil {
 					return 0, err
 				}
-
 				currentCubeValueBuffer += string(v)
 				continue
 			}
@@ -70,18 +44,16 @@ func findPlayableGameId(game string) (int, error) {
 				if err != nil {
 					return 0, err
 				}
-
 				currentCubeValue = num
 			}
-
 			continue
 		}
 
 		availableCubeBuffer += string(v)
-		for cube, availableValue := range availableCubes {
+		for cube, value := range cubes {
 			if strings.Contains(availableCubeBuffer, cube) {
-				if currentCubeValue > availableValue {
-					return 0, errors.New("error current cube value is higher than the available value")
+				if currentCubeValue > value {
+					cubes[cube] = currentCubeValue
 				}
 				currentCubeValue = 0
 				currentCubeValueBuffer = ""
@@ -91,26 +63,31 @@ func findPlayableGameId(game string) (int, error) {
 		}
 	}
 
-	return gameId, nil
-}
-
-func calculateSumOfGameIds(games []string) int {
-	sumOfGameIds := 0
-	
-	for _, game := range games {
-		gameId, err := findPlayableGameId(game)
-		if err != nil {
-			fmt.Println("error finding playable game id", err)
-			continue
-		}
-		sumOfGameIds += gameId
+	res := 1
+	for _, v := range cubes {
+		res *= v
 	}
 
-	return sumOfGameIds
+	return res, nil
+}
+
+func calculateSumOfGames(games []string) int {
+	sum := 0
+
+	for _, game := range games {
+		game, err := findPlayableGame(game)
+		if err != nil {
+			fmt.Println("error finding playable game", err)
+			continue
+		}
+		sum += game
+	}
+
+	return sum
 }
 
 func main() {
 	games := strings.Split(input, "\n")
-	sum := calculateSumOfGameIds(games)
+	sum := calculateSumOfGames(games)
 	fmt.Print(sum)
 }

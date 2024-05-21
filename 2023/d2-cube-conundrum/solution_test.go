@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func TestCalculateSumOfGameIds(t *testing.T) {
+func TestCalculateSumOfGames(t *testing.T) {
 	tests := []struct {
 		input []string
 		expected int
@@ -15,12 +15,12 @@ func TestCalculateSumOfGameIds(t *testing.T) {
 				"Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red",
 				"Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green",
 			},
-			expected: 1 + 2 + 5,
+			expected: 2286,
 		},
 	}
 
 	for _, test := range tests {
-		result := calculateSumOfGameIds(test.input)
+		result := calculateSumOfGames(test.input)
 
 		if result != test.expected {
 			t.Errorf("For input %v, expected %d, but got %d", test.input, test.expected, result)
