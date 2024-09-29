@@ -2,15 +2,15 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
-type symbols struct {
-	above   map[int]bool
-	current map[int]bool
-	below   map[int]bool
+type Gear struct {
+	row, col int
+	parts    []int
 }
 
 //go:embed input.txt
@@ -18,129 +18,106 @@ var input string
 
 func main() {
 	in := strings.Split(input, "\n")
-	sum := calculateSumInEngineSchematics(in)
-	println(sum)
+	sum := calculateGearRatioSum(in)
+	fmt.Println("Result:", sum)
 }
 
-func calculateSumInEngineSchematics(in []string) int {
-	var symbols_pos = getAllSymbolsPositions(in)
+func calculateGearRatioSum(in []string) int {
+	schematic := readEngineSchematic(in)
+	gears := findGears(schematic)
 
 	sum := 0
-
-	var s symbols
-
-	for i, line := range in {
-		if i > 0 {
-			s.above = symbols_pos[i-1]
-		}
-
-		s.below = symbols_pos[i]
-		if i != len(in)-1 {
-			s.below = symbols_pos[i+1]
-		}
-
-		s.current = symbols_pos[i]
-		lineSum, err := findValidNumbers(line, s)
-		if err != nil {
-			print(err)
-		}
-
-		sum += lineSum
+	for _, v := range gears {
+		ratio := v.parts[0] * v.parts[1]
+		sum += ratio
 	}
-
 	return sum
 }
 
-func findValidNumbers(line string, s symbols) (int, error) {
-	if s.above == nil && s.below == nil {
-		return 0, nil
+func readEngineSchematic(in []string) [][]rune {
+	schematic := make([][]rune, len(in))
+	for i, line := range in {
+		schematic[i] = []rune(line)
 	}
-
-	var sum int
-	var num_position []int
-	var num_buffer string
-	for i, v := range line {
-
-		if unicode.IsDigit(v) {
-			_, err := strconv.Atoi(string(v))
-			if err != nil {
-				return 0, nil
-			}
-
-			num_position = append(num_position, i)
-			num_buffer += string(v)
-			continue
-		}
-
-		if len(num_buffer) > 0 {
-			num, err := strconv.Atoi(num_buffer)
-			if err != nil {
-				return 0, err
-			}
-
-			if verifyAdjacentSymbol(num_position, s) {
-				sum += num
-			}
-		}
-
-		num_position = nil
-		num_buffer = ""
-	}
-
-	if len(num_buffer) > 0 {
-		num, err := strconv.Atoi(num_buffer)
-		if err != nil {
-			return 0, err
-		}
-
-		if verifyAdjacentSymbol(num_position, s) {
-			sum += num
-		}
-	}
-
-	return sum, nil
+	return schematic
 }
 
-func verifyAdjacentSymbol(num_position []int, s symbols) bool {
-	for i, pos := range num_position {
-		if s.above[pos] || s.below[pos] || s.current[pos] {
-			return true
-		}
+func findGears(schematic [][]rune) []Gear {
+	var gears []Gear
+	for row := range schematic {
+		for col := range schematic[row] {
+			if schematic[row][col] == '*' {
+				parts := findParts(schematic, row, col)
+				if len(parts) != 2 {
+					continue
+				}
 
-		if i == 0 {
-			if s.above[pos-1] || s.below[pos-1] || s.current[pos-1] {
-				return true
+				gear := Gear{
+					col:   col,
+					row:   row,
+					parts: parts,
+				}
+				gears = append(gears, gear)
 			}
 		}
+	}
+	return gears
+}
 
-		if i == len(num_position)-1 {
-			if s.above[pos+1] || s.below[pos+1] || s.current[pos+1] {
-				return true
+// ...  .->[row-1][col-1] .->[row-1][col] .->[row-1][col+1]
+// .*.  .->[row]  [col-1] *->[row]  [col] .->[row]  [col+1]
+// ...  .->[row+1][col-1] .->[row+1][col] .->[row+1][col+1]
+func findParts(schematic [][]rune, row, col int) []int {
+	var parts []int
+	var seenPositions = make(map[string]bool)
+	for dr := -1; dr <= 1; dr++ {
+		for dc := -1; dc <= 1; dc++ {
+			if dr == 0 && dc == 0 {
+				continue
+			}
+
+			newRow, newCol := row+dr, col+dc
+			if newRow >= 0 && newRow < len(schematic) && newCol >= 0 && newCol < len(schematic[newRow]) {
+				num, position, found := getFullNumber(schematic, newRow, newCol)
+				pRow := fmt.Sprintf("%d-%s", newRow, position)
+				if found && !seenPositions[pRow] {
+					parts = append(parts, num)
+					seenPositions[pRow] = true
+				}
 			}
 		}
 	}
 
-	return false
+	return parts
 }
 
-func getAllSymbolsPositions(in []string) []map[int]bool {
-	var res []map[int]bool
-	for _, line := range in {
-		res = append(res, findLineSymbolsPosition(line))
-	}
-	return res
-}
-
-func findLineSymbolsPosition(line string) map[int]bool {
-	m := make(map[int]bool)
-	for i, v := range line {
-		if unicode.IsSymbol(v) || unicode.IsPunct(v) && string(v) != "." {
-			m[i] = true
-			continue
-		}
-
-		m[i] = false
+func getFullNumber(schematic [][]rune, row, col int) (int, string, bool) {
+	line := schematic[row]
+	if !unicode.IsDigit(line[col]) {
+		return 0, "", false
 	}
 
-	return m
+	start := col
+	for start > 0 && unicode.IsNumber(line[start-1]) {
+		start--
+	}
+
+	end := col
+	for end < len(line)-1 && unicode.IsNumber(line[end+1]) {
+		end++
+	}
+
+	numBuffer := ""
+	for i := start; i <= end; i++ {
+		numBuffer += string(schematic[row][i])
+	}
+
+	number, err := strconv.Atoi(numBuffer)
+	if err != nil {
+		return 0, "", false
+	}
+
+	position := fmt.Sprintf("%d-%d", start, end)
+
+	return number, position, true
 }
