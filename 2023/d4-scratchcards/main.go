@@ -16,12 +16,31 @@ func main() {
 }
 
 func calculateSum(in []string) int {
-	res := 0
-	for _, card := range in {
-		res += calculateScratchcardsSum(card)
+	cards := make(map[int]int)
+	sum := 0
+
+	for i, card := range in {
+		res := calculateScratchcardsSum(card)
+		stored := cards[i]
+		if stored == 0 {
+			cards[i]++
+			stored++
+		}
+
+		sum += stored
+
+		for j := 1; j <= res; j++ {
+			acc := i + j
+			if cards[acc] == 0 {
+				cards[acc]++
+			}
+
+			cards[acc] += stored
+		}
 	}
-	print(res)
-	return res
+
+	print(sum)
+	return sum
 }
 
 func calculateScratchcardsSum(card string) int {
@@ -38,11 +57,7 @@ func calculateScratchcardsSum(card string) int {
 	for winNum := range winNums {
 		_, exists := choicesNums[winNum]
 		if exists {
-			if sum == 0 {
-				sum += 1
-				continue
-			}
-			sum *= 2
+			sum++
 		}
 	}
 
