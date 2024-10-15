@@ -57,9 +57,10 @@ func getNums(line string) []int {
 	for i, v := range line {
 		if unicode.IsDigit(v) {
 			numBuilder.WriteRune(v)
-			if i != len(line)-1 {
-				continue
-			}
+		}
+
+		if i != len(line)-1 {
+			continue
 		}
 
 		if numBuilder.Len() > 0 {

@@ -12,7 +12,7 @@ func TestCalculateWaysOfBeatingRaces(t *testing.T) {
 				"Time:      7  15   30",
 				"Distance:  9  40  200",
 			},
-			expected: 288,
+			expected: 71503,
 		},
 	}
 
