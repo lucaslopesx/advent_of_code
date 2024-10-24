@@ -9,13 +9,13 @@ func TestCalculateCamelCardsGameWinnings(t *testing.T) {
 	}{
 		{
 			input: []string{
-				"32T3K 765",
-				"T55J5 684",
-				"KK677 28",
-				"KTJJT 220",
-				"QQQJA 483",
+				"JKA32 28",
+				"32AJJ 765",
+				"3JJA2 684",
+				"3333J 220",
+				"JJAAA 483",
 			},
-			expected: 6440,
+			expected: 5905,
 		},
 	}
 

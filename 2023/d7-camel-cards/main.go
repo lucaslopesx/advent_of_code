@@ -94,36 +94,48 @@ func getHandsAndBids(input []string) ([]Hand, error) {
 
 func (hand Hand) categorizeHand() Type {
 	handMap := make(map[rune]int)
+
+	joker := 0
 	for _, v := range hand.Cards {
+		if v == 'J' {
+			joker++
+			continue
+		}
 		handMap[v]++
 	}
 
-	pairs := 0
-	hasThree := false
+	if joker == 5 {
+		return FiveOfKind
+	}
 
-	for _, v := range handMap {
-		if v == 2 {
+	max := 0
+	for _, count := range handMap {
+		if count > max {
+			max = count
+		}
+	}
+
+	max += joker
+	if max == 5 {
+		return FiveOfKind
+	}
+
+	if max == 4 {
+		return FourOfKind
+	}
+
+	pairs := 0
+	for _, count := range handMap {
+		if count == 2 {
 			pairs++
 		}
-
-		if v == 3 {
-			hasThree = true
-		}
-
-		if v == 4 {
-			return FourOfKind
-		}
-
-		if v == 5 {
-			return FiveOfKind
-		}
 	}
 
-	if pairs == 1 && hasThree {
-		return FullHouse
-	}
+	if max == 3 {
+		if pairs == 2 || (pairs == 1 && joker == 0) {
+			return FullHouse
+		}
 
-	if hasThree {
 		return ThreeOfKind
 	}
 
@@ -131,7 +143,7 @@ func (hand Hand) categorizeHand() Type {
 		return TwoPair
 	}
 
-	if pairs == 1 {
+	if max == 2 {
 		return OnePair
 	}
 
@@ -168,7 +180,7 @@ func getCardValue(card byte) int {
 	case 'Q':
 		return 12
 	case 'J':
-		return 11
+		return 1
 	case 'T':
 		return 10
 	default:
