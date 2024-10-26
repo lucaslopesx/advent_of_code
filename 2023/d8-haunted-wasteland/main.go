@@ -9,12 +9,6 @@ import (
 //go:embed input.txt
 var input string
 
-// type Network struct {
-// 	Value string
-// 	Left  string
-// 	Right string
-// }
-
 type Network map[string][]string
 
 func main() {
@@ -25,17 +19,25 @@ func main() {
 
 func runInstructions(in []string) int {
 	instructions := getInstructions(in[0])
-	networks := getNetworks(in[2:])
+	networks, startingPoints := getNetworks(in[2:])
 
-	return calculateInstructionsSteps(instructions, networks)
+	var steps []int
+
+	for _, start := range startingPoints {
+		steps = append(steps, calculateInstructionsSteps(instructions, networks, start))
+	}
+
+	result := LCM(steps[0], steps[1], steps[2:]...)
+
+	return result
 }
 
-func calculateInstructionsSteps(instructions []rune, networks Network) int {
-	currentValue := "AAA"
-	goal := "ZZZ"
+func calculateInstructionsSteps(instructions []rune, networks Network, start string) int {
+	currentValue := start
 	i := 0
 	steps := 0
 	for {
+
 		instruction := instructions[i]
 		switch instruction {
 		case 'R':
@@ -51,7 +53,7 @@ func calculateInstructionsSteps(instructions []rune, networks Network) int {
 			i = 0
 		}
 
-		if currentValue == goal {
+		if _, found := strings.CutSuffix(currentValue, "Z"); found {
 			return steps
 		}
 	}
@@ -68,28 +70,39 @@ func getInstructions(line string) []rune {
 	return instructions
 }
 
-func getNetworks(lines []string) Network {
+func getNetworks(lines []string) (Network, []string) {
 	networks := make(map[string][]string)
+	var startingPoints []string
 	for _, line := range lines {
-		network, err := extractNetwork(line)
+		network, startingPoint, err := extractNetwork(line)
 		if err != nil {
 			panic("error extracting network")
 		}
+
+		if startingPoint != "" {
+			startingPoints = append(startingPoints, startingPoint)
+		}
+
 		for k, v := range network {
 			networks[k] = append(networks[k], v...)
 		}
 	}
 
-	return networks
+	return networks, startingPoints
 }
 
-func extractNetwork(line string) (Network, error) {
+func extractNetwork(line string) (Network, string, error) {
 	lineSplit := strings.Split(line, "=")
+	startingPoint := ""
 	if len(lineSplit) != 2 {
-		return Network{}, fmt.Errorf("invalid line size")
+		return Network{}, "", fmt.Errorf("invalid line size")
 	}
 
 	value := strings.TrimSpace(lineSplit[0])
+	_, exists := strings.CutSuffix(value, "A")
+	if exists {
+		startingPoint = value
+	}
 	_ = value
 
 	left := ""
@@ -128,5 +141,24 @@ func extractNetwork(line string) (Network, error) {
 	sides := []string{left, right}
 	network[value] = sides
 
-	return network, nil
+	return network, startingPoint, nil
+}
+
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
 }
