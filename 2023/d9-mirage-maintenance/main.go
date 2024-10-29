@@ -43,13 +43,13 @@ func extrapolateHistory(sequences [][]int) int {
 
 		currentValue := 0
 		if i != sequencesSize {
-			currentValue = current[len(current)-1]
+			currentValue = current[0]
 		}
 
-		upperValue := up[len(up)-1]
+		upperValue := up[0]
 
-		extrapolatedValue := upperValue + currentValue
-		sequences[i-1] = append(sequences[i-1], extrapolatedValue)
+		extrapolatedValue := upperValue - currentValue
+		sequences[i-1] = append([]int{extrapolatedValue}, sequences[i-1]...)
 		lastValue = extrapolatedValue
 	}
 
