@@ -16,7 +16,7 @@ func TestCalculateSum(t *testing.T) {
 				"3   9",
 				"3   3",
 			},
-			expected: 11,
+			expected: 31,
 		},
 	}
 

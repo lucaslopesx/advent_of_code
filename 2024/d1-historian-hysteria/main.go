@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,22 +30,34 @@ func calc(input []string) int {
 		right = append(right, nums[1])
 	}
 
-	return sumSideDistances(left, right)
+	rightMap := getRightListRecurrence(right)
+
+	return sumRightSideSimilarity(left, rightMap)
 }
 
-func sumSideDistances(left []int, right []int) int {
+func sumRightSideSimilarity(left []int, rightMap map[int]int) int {
 	sort.Ints(left)
-	sort.Ints(right)
 
 	sum := 0
-	for i := range left {
-		diff := left[i] - right[i]
-		diffAbs := math.Abs(float64(diff))
-		sum += int(diffAbs)
+	for _, v := range left {
+		recurrence, exists := rightMap[v]
+		if !exists {
+			continue
+		}
+
+		sum += v * recurrence
 	}
 
 	return sum
+}
 
+func getRightListRecurrence(right []int) map[int]int {
+	rightMap := make(map[int]int)
+	for _, v := range right {
+		rightMap[v]++
+	}
+
+	return rightMap
 }
 
 func getNums(input string) ([]int, error) {
