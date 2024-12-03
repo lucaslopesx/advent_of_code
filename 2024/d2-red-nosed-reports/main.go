@@ -32,12 +32,25 @@ func calc(input []string) int {
 
 	sum := 0
 	for _, level := range reports {
-		if isLevelSafe(level) {
+		if isLevelSafe(level) || tryMakeLevelSafe(level) {
 			sum++
 		}
 	}
 
 	return sum
+}
+
+func tryMakeLevelSafe(level []int) bool {
+	for i := range level {
+		newLevel := make([]int, 0, len(level)-1)
+		newLevel = append(newLevel, level[:i]...)
+		newLevel = append(newLevel, level[i+1:]...)
+
+		if isLevelSafe(newLevel) {
+			return true
+		}
+	}
+	return false
 }
 
 func isLevelSafe(level []int) bool {
@@ -48,11 +61,7 @@ func isLevelSafe(level []int) bool {
 		}
 
 		diff := level[i] - level[i+1]
-		if diff == 0 {
-			return false
-		}
-
-		if (diff > 0) != !isIncreasing {
+		if diff == 0 || (diff > 0) != !isIncreasing {
 			return false
 		}
 

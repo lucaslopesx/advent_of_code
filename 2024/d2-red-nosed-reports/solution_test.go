@@ -16,7 +16,7 @@ func TestCalc(t *testing.T) {
 				"8 6 4 4 1",
 				"1 3 6 7 9",
 			},
-			expected: 2,
+			expected: 4,
 		},
 	}
 
