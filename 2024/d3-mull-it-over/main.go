@@ -28,6 +28,7 @@ func calc(input string) int {
 		if i+4 >= len(input) {
 			continue
 		}
+
 		if input[i:i+4] == "do()" {
 			enabled = true
 			continue
