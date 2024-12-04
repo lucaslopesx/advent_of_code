@@ -18,13 +18,24 @@ func main() {
 
 func calc(input string) int {
 	sum := 0
+	enabled := true
 	for i := range input {
-		if i+4 >= len(input) {
+		if i+7 < len(input) && input[i:i+7] == "don't()" {
+			enabled = false
 			continue
 		}
 
-		if input[i:i+4] == "mul(" {
+		if i+4 >= len(input) {
+			continue
+		}
+		if input[i:i+4] == "do()" {
+			enabled = true
+			continue
+		}
+
+		if input[i:i+4] == "mul(" && enabled {
 			sum += getInstructionMultiplied(input[i+4:])
+			continue
 		}
 	}
 
@@ -56,7 +67,6 @@ func getInstructionMultiplied(input string) int {
 }
 
 func getNums(input string) ([]int, error) {
-
 	numStrings := strings.Split(input, ",")
 	numbers := make([]int, 0, len(numStrings))
 	for _, numStr := range numStrings {
